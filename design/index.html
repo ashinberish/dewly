@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<title>Dewly — iOS Water Reminder App Design</title>
+<style>
+:root{
+  --accent:#00A98F; --accent-soft:rgba(0,169,143,.14);
+  --orange:#FF9500; --green:#34C759;
+  font:100%/1.45 ui-rounded,"SF Pro Rounded","Nunito",-apple-system,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#F5F5F7;color:#1D1D1F}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+
+/* ───────── page ───────── */
+.wrap{max-width:1180px;margin:0 auto;padding:64px 24px 96px}
+.top{display:grid;grid-template-columns:1fr auto;gap:56px;align-items:center}
+@media(max-width:900px){.top{grid-template-columns:1fr;justify-items:center;text-align:center}}
+.eyebrow{font-size:.85rem;font-weight:700;color:#86868B;margin-bottom:10px}
+.display{font-size:clamp(3rem,7vw,5.2rem);font-weight:800;letter-spacing:-.03em;line-height:1}
+.lede{font-size:1.25rem;line-height:1.4;color:#6E6E73;max-width:470px;margin-top:16px;font-weight:500}
+.lede b{color:#1D1D1F}
+.ctrls{display:flex;flex-direction:column;gap:14px;margin-top:32px}
+@media(max-width:900px){.ctrls{align-items:center}}
+.ctrl{display:flex;align-items:center;gap:12px;font-size:.9rem;font-weight:700;color:#6E6E73}
+.ctrl .lbl{width:92px}
+.dotbtn{width:26px;height:26px;border-radius:50%;box-shadow:0 0 0 2px #F5F5F7,0 0 0 3px transparent;transition:box-shadow .15s}
+.dotbtn.on{box-shadow:0 0 0 2px #F5F5F7,0 0 0 4px #1D1D1F}
+.pageseg{display:flex;background:rgba(0,0,0,.06);border-radius:999px;padding:3px}
+.pageseg button{padding:6px 14px;border-radius:999px;font-weight:700;font-size:.85rem;color:#6E6E73}
+.pageseg button.on{background:#fff;color:#1D1D1F;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.try{margin-top:28px;font-size:.9rem;color:#86868B;line-height:1.7}
+.try b{color:#1D1D1F;font-weight:700}
+section{margin-top:110px}
+h2{font-size:2.2rem;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.sub{color:#6E6E73;margin:10px 0 40px;max-width:620px;font-size:1.05rem;font-weight:500}
+
+/* ───────── phone shell ───────── */
+.phone{position:relative;width:340px;height:736px;border-radius:58px;background:#1D1D1F;padding:9px;box-shadow:0 0 0 1px #3a3a3c inset,0 40px 80px rgba(0,0,0,.18)}
+.scr{
+  --bg:#F2F2F7; --cell:#FFF; --label:#000; --label2:rgba(60,60,67,.6); --label3:rgba(60,60,67,.3);
+  --sep:rgba(60,60,67,.16); --fill:rgba(120,120,128,.12); --glass:rgba(255,255,255,.72); --glass-edge:rgba(255,255,255,.8);
+  position:relative;width:100%;height:100%;border-radius:50px;overflow:hidden;overflow:clip;background:var(--bg);color:var(--label);font-size:14px;
+  transition:background .4s, color .4s; user-select:none; -webkit-user-select:none;
+}
+.scr.dark{
+  --bg:#000; --cell:#1C1C1E; --label:#fff; --label2:rgba(235,235,245,.6); --label3:rgba(235,235,245,.3);
+  --sep:rgba(84,84,88,.5); --fill:rgba(120,120,128,.24); --glass:rgba(40,40,42,.7); --glass-edge:rgba(255,255,255,.12);
+}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:100px;height:29px;border-radius:20px;background:#000;z-index:60}
+.sb{position:absolute;top:0;left:0;right:0;height:50px;display:flex;justify-content:space-between;align-items:center;padding:4px 30px 0 38px;font-weight:700;font-size:14px;z-index:55;pointer-events:none}
+.homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:var(--label);z-index:70;opacity:.9}
+
+/* views */
+.view{position:absolute;inset:0;padding:58px 18px 120px;overflow-y:auto;scrollbar-width:none;
+  opacity:0;transform:translateY(8px) scale(.995);pointer-events:none;transition:opacity .28s ease,transform .38s cubic-bezier(.2,.9,.25,1);
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent 44px,#000 64px);mask-image:linear-gradient(to bottom,transparent 0,transparent 44px,#000 64px)}
+.view::-webkit-scrollbar{display:none}
+.view.on{opacity:1;transform:none;pointer-events:auto}
+.date{font-size:13px;font-weight:700;color:var(--label2);margin-top:6px}
+.ttl{font-size:32px;font-weight:800;letter-spacing:-.015em;line-height:1.1}
+.hrow{display:flex;justify-content:space-between;align-items:flex-end}
+
+/* streak chip */
+.chip{display:inline-flex;align-items:center;gap:4px;font-weight:800;font-size:14px;color:#C66A00;background:rgba(255,149,0,.15);border-radius:999px;padding:5px 11px 5px 8px;margin-bottom:4px}
+.scr.dark .chip{color:#FFB340;background:rgba(255,149,0,.2)}
+.chip svg{width:15px;height:15px;color:var(--orange)}
+
+/* ring */
+.ring{position:relative;width:212px;height:212px;margin:18px auto 6px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+.ring circle{fill:none;stroke-width:22;stroke-linecap:round}
+.ring .tr{stroke:var(--accent-soft)}
+.ring .pr{stroke:var(--accent)}
+.ring .tip{fill:var(--accent);stroke:none}
+.ringtxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ringtxt .n{font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.ringtxt .u{font-size:13.5px;font-weight:700;color:var(--label2);margin-top:4px}
+.togo{text-align:center;font-size:14px;font-weight:700;color:var(--label2);height:20px}
+.togo.done{color:var(--green)}
+
+/* add buttons */
+.adds{display:grid;grid-template-columns:1fr 1fr 1fr 48px;gap:8px;margin-top:16px}
+.add{height:48px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:16px;transition:transform .12s ease-out,filter .12s}
+.add.more{background:var(--accent);color:#fff;font-size:24px;font-weight:600;display:grid;place-items:center}
+.pressed{transform:scale(.93)!important;filter:brightness(.92)}
+
+/* lists */
+.hdr{font-size:13px;font-weight:800;color:var(--label);margin:22px 0 0 4px;display:flex;justify-content:space-between}
+.hdr span{color:var(--label2);font-weight:700}
+.list{background:var(--cell);border-radius:24px;margin-top:8px;overflow:hidden;transition:background .4s}
+.cell{display:flex;align-items:center;gap:12px;min-height:50px;padding:0 18px;position:relative;font-size:15px;font-weight:700}
+.cell+.cell::before{content:"";position:absolute;top:0;left:18px;right:18px;border-top:.5px solid var(--sep)}
+.cell .v{margin-left:auto;color:var(--label2);font-weight:600;font-variant-numeric:tabular-nums;display:flex;gap:6px;align-items:center}
+.cell .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--accent-soft);color:var(--accent)}
+.cell .ic svg{width:16px;height:16px}
+.cell.tap{cursor:pointer;transition:background .12s}
+.cell.tap.pressed{background:var(--fill);transform:none!important;filter:none}
+.chev{width:7px;height:12px;color:var(--label3)}
+.logrow{animation:rowIn .45s cubic-bezier(.2,.9,.25,1)}
+@keyframes rowIn{from{opacity:0;transform:translateY(-6px)}}
+.empty{padding:16px 18px;color:var(--label2);font-weight:600;font-size:14px}
+
+/* toggle */
+.tog{margin-left:auto;width:52px;height:32px;border-radius:999px;background:var(--fill);position:relative;flex:none;transition:background .25s}
+.tog i{position:absolute;top:2px;left:2px;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15),0 1px 1px rgba(0,0,0,.08)}
+.tog.on{background:var(--green)}
+.ftr{font-size:12.5px;font-weight:600;color:var(--label2);margin:8px 18px 0;line-height:1.4}
+
+/* segmented */
+.seg{position:relative;display:flex;background:var(--fill);border-radius:999px;padding:3px;margin-top:14px}
+.seg button{position:relative;z-index:1;flex:1;padding:7px 0;font-weight:800;font-size:13.5px;color:var(--label);border-radius:999px}
+.seg .thumb{position:absolute;top:3px;bottom:3px;left:3px;border-radius:999px;background:var(--cell);box-shadow:0 3px 8px rgba(0,0,0,.1),0 0 0 .5px rgba(0,0,0,.04)}
+.scr.dark .seg .thumb{background:#636366}
+
+/* streak */
+.hero{margin-top:14px;background:var(--cell);border-radius:28px;padding:20px;display:flex;align-items:center;gap:16px}
+.hero .fl{width:64px;height:64px;border-radius:50%;background:rgba(255,149,0,.15);display:grid;place-items:center;flex:none}
+.hero .fl svg{width:34px;height:34px;color:var(--orange)}
+.big{font-size:56px;font-weight:800;letter-spacing:-.02em;line-height:.95;font-variant-numeric:tabular-nums}
+.big small{font-size:18px;font-weight:800;color:var(--label2);letter-spacing:0}
+.hero p{font-size:13px;font-weight:700;color:var(--label2);margin-top:4px}
+.bump{animation:bump .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes bump{40%{transform:scale(1.18)}}
+.week{display:flex;justify-content:space-between;padding:16px 18px}
+.week div{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--label2)}
+.week i{width:30px;height:30px;border-radius:50%;background:var(--fill);display:grid;place-items:center;transition:background .3s,box-shadow .3s}
+.week i.y{background:var(--accent)}
+.week i.y::after,.cal i.y::after{content:""}
+.week i.y svg{display:block}
+.week i svg{display:none;width:14px;height:14px;color:#fff}
+.week i.t{background:none;box-shadow:inset 0 0 0 2.5px var(--accent)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:7px 0;padding:14px 12px 16px;justify-items:center}
+.cal b{font-size:11px;font-weight:800;color:var(--label3)}
+.cal i{width:30px;height:30px;border-radius:50%;font-style:normal;font-size:12.5px;font-weight:700;display:grid;place-items:center;color:var(--label2);font-variant-numeric:tabular-nums;transition:background .3s,color .3s}
+.cal i.y{background:var(--accent);color:#fff}
+.cal i.t{box-shadow:inset 0 0 0 2px var(--accent);color:var(--accent);font-weight:800}
+.badges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.badge{background:var(--cell);border-radius:22px;padding:14px 6px;text-align:center;font-weight:800;font-size:13px}
+.badge .bi{width:40px;height:40px;border-radius:50%;margin:0 auto 6px;display:grid;place-items:center;background:rgba(255,149,0,.15)}
+.badge .bi svg{width:20px;height:20px;color:var(--orange)}
+.badge small{display:block;font-size:11px;color:var(--label2);font-weight:700}
+.badge.off{opacity:.45}
+
+/* chart */
+.chartcard{background:var(--cell);border-radius:28px;padding:18px;margin-top:12px}
+.klbl{font-size:12px;font-weight:800;color:var(--label2)}
+.kval{font-size:34px;font-weight:800;letter-spacing:-.015em;line-height:1.1;font-variant-numeric:tabular-nums}
+.kval small{font-size:15px;color:var(--label2)}
+.chart{position:relative;display:flex;align-items:flex-end;gap:6px;height:140px;margin-top:14px}
+.chart .gl{position:absolute;left:0;right:0;border-top:1.5px dashed var(--label3);z-index:2;pointer-events:none}
+.chart .col{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
+.chart .b{width:100%;max-width:26px;border-radius:999px;background:var(--accent);transform-origin:bottom;transform:scaleY(0);transition:transform .7s cubic-bezier(.2,1,.3,1)}
+.chart .b.m{background:var(--accent-soft)}
+.chart span{font-size:10.5px;font-weight:800;color:var(--label2)}
+
+/* tab bar: floating glass capsule with a sliding lens */
+.tabbar{position:absolute;left:16px;right:16px;bottom:24px;height:66px;border-radius:999px;background:var(--glass);
+  backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:0 10px 30px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.06),inset 0 1px 0 var(--glass-edge);display:flex;padding:5px;z-index:40;transition:background .4s}
+.tabbar .lens{position:absolute;top:5px;bottom:5px;left:5px;border-radius:999px;background:var(--accent-soft)}
+.tab{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10.5px;font-weight:800;color:var(--label2);border-radius:999px;transition:color .2s}
+.tab svg{width:24px;height:24px}
+.tab.on{color:var(--accent)}
+.tab.pressed{transform:scale(.92)!important;filter:none}
+
+/* toast */
+.toast{position:absolute;left:50%;bottom:104px;z-index:45;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 18px;border-radius:999px;
+  background:rgba(28,28,30,.86);color:#fff;font-weight:700;font-size:14px;white-space:nowrap;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 10px 30px rgba(0,0,0,.2);
+  transform:translate(-50%,20px) scale(.9);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.2,1.2,.3,1),opacity .2s}
+.scr.dark .toast{background:rgba(60,60,64,.9)}
+.toast.on{transform:translate(-50%,0) scale(1);opacity:1;pointer-events:auto}
+.toast button{background:rgba(255,255,255,.18);border-radius:999px;padding:6px 14px;font-weight:800;color:#fff}
+
+/* sheet */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:80;opacity:0;pointer-events:none}
+.sheet{position:absolute;left:6px;right:6px;bottom:6px;height:430px;z-index:81;border-radius:42px;background:var(--cell);
+  box-shadow:0 -10px 40px rgba(0,0,0,.18);padding:10px 22px 26px;transform:translateY(110%);touch-action:none;transition:background .4s}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--label3);margin:0 auto}
+.shead{display:flex;justify-content:space-between;align-items:center;margin-top:12px;cursor:grab}
+.shead b{font-size:19px;font-weight:800}
+.xbtn{width:32px;height:32px;border-radius:50%;background:var(--fill);display:grid;place-items:center;color:var(--label2)}
+.amt{text-align:center;margin-top:22px;font-size:60px;font-weight:800;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.amt small{font-size:22px;color:var(--label2)}
+.slider{position:relative;height:44px;margin:22px 0 4px;touch-action:none;cursor:pointer}
+.slider .trk{position:absolute;left:0;right:0;top:50%;height:10px;margin-top:-5px;border-radius:999px;background:var(--fill)}
+.slider .fil{position:absolute;left:0;top:50%;height:10px;margin-top:-5px;border-radius:999px;background:var(--accent)}
+.slider .kn{position:absolute;top:50%;width:32px;height:32px;margin:-16px 0 0 -16px;border-radius:50%;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.06);transition:transform .15s}
+.slider.drag .kn{transform:scale(1.15)}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.preset{height:58px;border-radius:20px;background:var(--fill);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:15px;transition:transform .12s,background .2s,color .2s}
+.preset small{font-size:11px;font-weight:700;color:var(--label2)}
+.preset.on{background:var(--accent-soft);color:var(--accent)}
+.preset.on small{color:var(--accent)}
+.cta{display:block;width:100%;height:56px;border-radius:999px;background:var(--accent);color:#fff;font-weight:800;font-size:17px;margin-top:18px;transition:transform .12s,filter .12s}
+
+/* notification banner — grows out of the Dynamic Island */
+.banner{position:absolute;top:10px;left:10px;right:10px;z-index:65;border-radius:30px;padding:12px 14px;display:flex;gap:12px;align-items:center;
+  background:var(--glass);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);
+  box-shadow:0 12px 34px rgba(0,0,0,.2),inset 0 1px 0 var(--glass-edge);transform-origin:50% 0;opacity:0;pointer-events:none;touch-action:none}
+.banner .ai{width:40px;height:40px;flex:none}
+.banner .bt{flex:1;min-width:0}
+.banner .bt b{font-size:14.5px;font-weight:800;display:flex;justify-content:space-between}
+.banner .bt b span{font-size:12px;color:var(--label2);font-weight:700}
+.banner .bt p{font-size:13.5px;font-weight:600;line-height:1.3;color:var(--label)}
+.banner .bact{background:var(--accent);color:#fff;border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px;flex:none;transition:transform .12s}
+
+/* onboarding (static mini) */
+.onb{position:absolute;inset:0;background:var(--cell);z-index:5;padding:110px 26px 120px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.onb h4{font-size:30px;font-weight:800;letter-spacing:-.01em;line-height:1.1;margin-top:26px}
+.onb p{color:var(--label2);font-size:15px;font-weight:600;margin-top:10px}
+.stp{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:34px}
+.stp .rb{width:52px;height:52px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:28px;font-weight:700}
+.stp .bn{font-size:58px;font-weight:800;letter-spacing:-.02em}
+.stp .bn small{font-size:22px;color:var(--label2)}
+
+/* gallery */
+.gallery{display:flex;gap:22px;overflow-x:auto;padding:10px 4px 30px;scroll-snap-type:x mandatory;scrollbar-width:thin}
+.gallery .g{flex:none;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:14px}
+.gallery .scale{width:272px;height:589px}
+.gallery .phone{transform:scale(.8);transform-origin:0 0;pointer-events:none}
+.gallery .cap{font-size:.9rem;font-weight:800;text-align:center}
+.gallery .cap span{display:block;font-weight:600;color:#86868B;font-size:.82rem}
+
+/* brand */
+.brand{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.panel{background:#fff;border-radius:32px;padding:26px}
+.panel h3{font-size:.95rem;font-weight:800;margin-bottom:18px}
+.icons{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.icons figure{font-size:.75rem;font-weight:700;color:#86868B;text-align:center}
+.icons svg{display:block;margin:0 auto 8px}
+.wm{display:flex;align-items:center;gap:10px;font-size:2.2rem;font-weight:800;letter-spacing:-.02em}
+.wm.dk{background:#000;color:#fff;border-radius:24px;padding:14px 20px;margin-top:12px}
+.sw{display:flex;align-items:center;gap:12px;font-size:.9rem;font-weight:700;padding:6px 0}
+.sw i{width:30px;height:30px;border-radius:50%;border:1px solid rgba(0,0,0,.06)}
+.sw span{margin-left:auto;color:#86868B;font-size:.78rem;font-family:ui-monospace,Menlo,monospace}
+.note{font-size:.82rem;color:#86868B;margin-top:14px;font-weight:600}
+.principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.pr{background:#fff;border-radius:28px;padding:22px}
+.pr b{display:block;font-size:1rem;font-weight:800;margin-bottom:6px}
+.pr p{font-size:.88rem;color:#6E6E73;font-weight:500;line-height:1.45}
+footer{margin-top:96px;text-align:center;font-size:.82rem;font-weight:600;color:#86868B}
+
+@media (prefers-reduced-motion:reduce){
+  .view,.toast,.chart .b,.logrow{transition:opacity .2s!important;animation:none!important;transform:none}
+  .bump{animation:none}
+}
+@media (prefers-reduced-transparency:reduce){
+  .tabbar,.banner{background:var(--cell);backdrop-filter:none;-webkit-backdrop-filter:none}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="mark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="none" stroke="currentColor" stroke-width="9"/><path d="M20.5 58h59a30 30 0 0 1-59 0Z" fill="currentColor"/></symbol>
+  <symbol id="i-today" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M3.8 13.5h16.4A8.5 8.5 0 0 1 3.8 13.5Z" fill="currentColor"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 2.5c.7 3.2-2.8 4.9-2.8 8.1 0 1.2.9 2.1 2 2.1 1.4 0 2.1-1.1 2-2.6 2.3 1.5 3.9 3.9 3.9 6.4A5.1 5.1 0 0 1 12 21.6a5.1 5.1 0 0 1-5.1-5.3C6.9 10.6 11 7.9 12 2.5Z" fill="currentColor"/></symbol>
+  <symbol id="i-flame-o" viewBox="0 0 24 24"><path d="M12 3c.6 3-2.6 4.6-2.6 7.6 0 1.1.8 2 1.9 2 1.3 0 2-1 1.9-2.4 2.1 1.4 3.6 3.6 3.6 6A4.8 4.8 0 0 1 12 21a4.8 4.8 0 0 1-4.8-5C7.2 10.6 11 8 12 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-hist" viewBox="0 0 24 24"><path d="M5 20v-6M12 20V5M19 20v-9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15ZM10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10A4.2 4.2 0 0 1 12 7.6 4.2 4.2 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10Z" fill="currentColor"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10Z" fill="currentColor"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="chev" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="appicon" viewBox="0 0 180 180"><rect width="180" height="180" rx="42" fill="var(--accent)"/><use href="#mark" x="30" y="30" width="120" height="120" style="color:#fff"/></symbol>
+</svg>
+
+<div class="wrap">
+
+  <!-- ═════════ HERO + LIVE PROTOTYPE ═════════ -->
+  <div class="top">
+    <div>
+      <svg width="96" height="96" style="filter:drop-shadow(0 14px 24px rgba(0,0,0,.12))"><use href="#appicon"/></svg>
+      <div class="eyebrow" style="margin-top:26px">iOS App Concept</div>
+      <div class="display">Dewly</div>
+      <p class="lede"><b>Drink water. Keep the streak.</b> A calm hydration companion that reminds you at the right moments and gets out of the way.</p>
+
+      <div class="ctrls">
+        <div class="ctrl"><span class="lbl">Appearance</span>
+          <div class="pageseg" id="themeSeg"><button class="on" data-t="light">Light</button><button data-t="dark">Dark</button></div>
+        </div>
+        <div class="ctrl"><span class="lbl">Accent</span>
+          <button class="dotbtn on" data-c="#00A98F" data-s="rgba(0,169,143,.14)" style="background:#00A98F" aria-label="Mint"></button>
+          <button class="dotbtn" data-c="#FF6B4A" data-s="rgba(255,107,74,.15)" style="background:#FF6B4A" aria-label="Coral"></button>
+          <button class="dotbtn" data-c="#8E5CF0" data-s="rgba(142,92,240,.15)" style="background:#8E5CF0" aria-label="Lavender"></button>
+          <button class="dotbtn" data-c="#1D1D1F" data-s="rgba(120,120,128,.16)" style="background:#1D1D1F" aria-label="Graphite"></button>
+        </div>
+      </div>
+
+      <p class="try">
+        <b>This is a working prototype.</b> Try it:<br>
+        Tap <b>+250</b>. The ring springs forward, and <b>Undo</b> takes it back.<br>
+        Tap <b>+</b>, then drag the sheet down or flick it away.<br>
+        Go to <b>Reminders → Preview notification</b>, then swipe it up.<br>
+        Reach your goal to see the streak tick to 13.
+      </p>
+    </div>
+
+    <div class="phone" id="live">
+      <div class="scr" id="scr">
+        <div class="island"></div>
+        <div class="sb"><span>9:41</span><svg width="46" height="12" viewBox="0 0 46 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.5" y="5.5" width="3" height="6.5" rx="1"/><rect x="9" y="3" width="3" height="9" rx="1"/><rect x="13.5" y=".5" width="3" height="11.5" rx="1"/><rect x="22" y=".75" width="21" height="10.5" rx="3.4" fill="none" stroke="currentColor" opacity=".4"/><rect x="23.6" y="2.3" width="15.5" height="7.4" rx="2"/><rect x="43.6" y="4" width="1.6" height="4" rx=".8" opacity=".4"/></svg></div>
+
+        <!-- TODAY -->
+        <div class="view on" data-v="today">
+          <div class="date">Saturday, 31 October</div>
+          <div class="hrow"><div class="ttl">Today</div><span class="chip"><svg><use href="#i-flame"/></svg><span class="streakN">12</span></span></div>
+          <div class="ring">
+            <svg viewBox="0 0 220 220"><circle class="tr" cx="110" cy="110" r="94"/><circle class="pr" cx="110" cy="110" r="94"/></svg>
+            <div class="ringtxt"><div class="n">1,750</div><div class="u">of 2,500 ml</div></div>
+          </div>
+          <div class="togo">750 ml to go</div>
+          <div class="adds">
+            <button class="add" data-ml="150">+150</button>
+            <button class="add" data-ml="250">+250</button>
+            <button class="add" data-ml="500">+500</button>
+            <button class="add more" data-open-sheet aria-label="Custom amount">+</button>
+          </div>
+          <div class="list" style="margin-top:14px">
+            <div class="cell"><span class="ic"><svg><use href="#i-clock"/></svg></span>Next reminder<span class="v nextR">11:00</span></div>
+          </div>
+          <div class="hdr">Log <span class="logCount">2 drinks</span></div>
+          <div class="list logList">
+            <div class="cell">Glass<span class="v">250 ml · 9:20</span></div>
+            <div class="cell">Bottle<span class="v">500 ml · 8:05</span></div>
+          </div>
+        </div>
+
+        <!-- STREAK -->
+        <div class="view" data-v="streak">
+          <div class="ttl" style="margin-top:6px">Streak</div>
+          <div class="hero">
+            <div class="fl"><svg><use href="#i-flame"/></svg></div>
+            <div><div class="big"><span class="streakN">12</span> <small>days</small></div><p class="bestTxt">Best 21 days · 9 to go</p></div>
+          </div>
+          <div class="list"><div class="week"></div></div>
+          <div class="hdr">October <span class="calCount">27 of 30</span></div>
+          <div class="list"><div class="cal"></div></div>
+          <div class="hdr">Milestones</div>
+          <div class="badges">
+            <div class="badge"><div class="bi"><svg><use href="#i-flame"/></svg></div>7 days<small>Earned</small></div>
+            <div class="badge off"><div class="bi"><svg><use href="#i-flame"/></svg></div>30 days<small class="to30">18 to go</small></div>
+            <div class="badge off"><div class="bi"><svg><use href="#i-flame"/></svg></div>100 days<small>Locked</small></div>
+          </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="view" data-v="history">
+          <div class="ttl" style="margin-top:6px">History</div>
+          <div class="seg histSeg"><div class="thumb"></div><button data-r="w">Week</button><button data-r="m">Month</button><button data-r="y">Year</button></div>
+          <div class="chartcard">
+            <div class="klbl histLbl">Daily average</div>
+            <div class="kval"><span class="histVal">2.5</span> <small>L</small></div>
+            <div class="chart"><div class="gl"></div></div>
+          </div>
+          <div class="list">
+            <div class="cell">Goals met<span class="v histMet">6 of 7</span></div>
+            <div class="cell">Total<span class="v histTot">16.9 L</span></div>
+            <div class="cell"><span class="ic" style="background:rgba(255,45,85,.14);color:#FF2D55"><svg><use href="#i-heart"/></svg></span>Apple Health<span class="v">Synced <svg class="chev"><use href="#chev"/></svg></span></div>
+          </div>
+        </div>
+
+        <!-- REMINDERS -->
+        <div class="view" data-v="rem">
+          <div class="ttl" style="margin-top:6px">Reminders</div>
+          <div class="list" style="margin-top:14px">
+            <div class="cell tap" data-tog>Reminders<span class="tog on"><i></i></span></div>
+            <div class="cell tap" data-tog>Smart timing<span class="tog on"><i></i></span></div>
+          </div>
+          <div class="ftr">Skips a reminder if you drank recently, and learns when you usually drink.</div>
+          <div class="hdr">Schedule</div>
+          <div class="list">
+            <div class="cell"><span class="ic" style="background:rgba(255,149,0,.15);color:var(--orange)"><svg><use href="#i-sun"/></svg></span>Wake<span class="v">7:00</span></div>
+            <div class="cell"><span class="ic" style="background:rgba(94,92,230,.15);color:#5E5CE6"><svg><use href="#i-moon"/></svg></span>Sleep<span class="v">22:30</span></div>
+            <div class="cell tap" data-every><span class="ic"><svg><use href="#i-clock"/></svg></span>Every<span class="v"><span class="everyV">90 min</span><svg class="chev"><use href="#chev"/></svg></span></div>
+          </div>
+          <div class="hdr">Streak</div>
+          <div class="list">
+            <div class="cell tap" data-tog>Evening nudge<span class="tog on"><i></i></span></div>
+          </div>
+          <div class="ftr">At 20:00, only if you haven't reached your goal.</div>
+          <button class="cta" data-preview style="margin-top:20px">Preview notification</button>
+        </div>
+
+        <!-- tab bar -->
+        <nav class="tabbar">
+          <div class="lens"></div>
+          <button class="tab on" data-go="today"><svg><use href="#i-today"/></svg>Today</button>
+          <button class="tab" data-go="streak"><svg><use href="#i-flame-o"/></svg>Streak</button>
+          <button class="tab" data-go="history"><svg><use href="#i-hist"/></svg>History</button>
+          <button class="tab" data-go="rem"><svg><use href="#i-bell"/></svg>Reminders</button>
+        </nav>
+
+        <div class="toast"><span class="toastTxt">Added 250 ml</span><button class="undo">Undo</button></div>
+
+        <!-- sheet -->
+        <div class="scrim"></div>
+        <div class="sheet" role="dialog" aria-label="Add water">
+          <div class="grab"></div>
+          <div class="shead"><b>Add Water</b><button class="xbtn" data-close aria-label="Close"><svg width="14" height="14"><use href="#i-x"/></svg></button></div>
+          <div class="amt"><span class="amtN">300</span> <small>ml</small></div>
+          <div class="slider"><div class="trk"></div><div class="fil"></div><div class="kn"></div></div>
+          <div class="presets">
+            <button class="preset" data-p="200">200<small>Cup</small></button>
+            <button class="preset" data-p="330">330<small>Can</small></button>
+            <button class="preset" data-p="750">750<small>Flask</small></button>
+          </div>
+          <button class="cta sheetAdd">Add 300 ml</button>
+        </div>
+
+        <!-- banner -->
+        <div class="banner">
+          <svg class="ai"><use href="#appicon"/></svg>
+          <div class="bt"><b>Time for a glass <span>now</span></b><p class="bannerTxt">750 ml to go. Keep your 12-day streak.</p></div>
+          <button class="bact" data-banner-add>+250</button>
+        </div>
+
+        <div class="homebar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ ALL SCREENS ═════════ -->
+  <section>
+    <div class="eyebrow">Screens</div>
+    <h2>Every screen at a glance.</h2>
+    <p class="sub">These are rendered from the live prototype above, so they follow the appearance and accent you choose.</p>
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+  <!-- ═════════ BRAND ═════════ -->
+  <section>
+    <div class="eyebrow">Brand</div>
+    <h2>A level, not a droplet.</h2>
+    <p class="sub">The mark is a ring with a calm water line. It shows how full you are today, and it echoes the progress ring inside the app.</p>
+    <div class="brand">
+      <div class="panel"><h3>App icon</h3>
+        <div class="icons">
+          <figure><svg width="88" height="88"><use href="#appicon"/></svg>Default</figure>
+          <figure><svg width="88" height="88" viewBox="0 0 180 180"><rect width="180" height="180" rx="42" fill="#000"/><use href="#mark" x="30" y="30" width="120" height="120" style="color:var(--accent)"/></svg>Dark</figure>
+          <figure><svg width="88" height="88" viewBox="0 0 180 180"><rect width="180" height="180" rx="42" fill="#1C1C1E"/><use href="#mark" x="30" y="30" width="120" height="120" style="color:#C7C7CC"/></svg>Tinted</figure>
+        </div>
+      </div>
+      <div class="panel"><h3>Wordmark</h3>
+        <div class="wm"><svg width="36" height="36" style="color:var(--accent)"><use href="#mark"/></svg>dewly</div>
+        <div class="wm dk"><svg width="36" height="36" style="color:#fff"><use href="#mark"/></svg>dewly</div>
+        <p class="note">SF Pro Rounded Heavy. Lowercase keeps it friendly.</p>
+      </div>
+      <div class="panel"><h3>Colour</h3>
+        <div class="sw"><i style="background:var(--accent)"></i>Accent<span class="accHex">#00A98F</span></div>
+        <div class="sw"><i style="background:#FF9500"></i>Streak (system orange)<span>#FF9500</span></div>
+        <div class="sw"><i style="background:#F2F2F7"></i>Grouped background<span>#F2F2F7</span></div>
+        <div class="sw"><i style="background:#1C1C1E"></i>Dark cell<span>#1C1C1E</span></div>
+        <p class="note">One accent colour. Orange is used only for streaks. Everything else uses iOS system colours, so dark mode works automatically.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ PRINCIPLES ═════════ -->
+  <section>
+    <div class="eyebrow">Interaction</div>
+    <h2>Why it feels like iOS.</h2>
+    <p class="sub">Following Apple's <i>Designing Fluid Interfaces</i> guidance, the prototype uses the same motion techniques as iOS.</p>
+    <div class="principles">
+      <div class="pr"><b>Instant response</b><p>Buttons shrink the moment your finger touches them, before you let go. Nothing waits for a tap to finish.</p></div>
+      <div class="pr"><b>Springs, not timers</b><p>The ring, the tab highlight, the segmented control and the sheet all move on springs. Tap quickly and the motion picks up from where it is, with no jumps.</p></div>
+      <div class="pr"><b>Throw to dismiss</b><p>The sheet follows your finger exactly. When you let go, its speed decides where it lands, and dragging it upward meets gentle resistance.</p></div>
+      <div class="pr"><b>Consistent origins</b><p>Notifications grow out of the Dynamic Island and leave the same way. The sheet rises from the bottom and returns there.</p></div>
+      <div class="pr"><b>Forgiveness</b><p>Every log shows an Undo toast, so there's never a “Are you sure?” dialog.</p></div>
+      <div class="pr"><b>Accessible by default</b><p>Respects Reduce Motion and Reduce Transparency, supports dark mode, and every control is a large, rounded target.</p></div>
+    </div>
+  </section>
+
+  <footer>Dewly · iOS app concept</footer>
+</div>
+
+<script>
+(() => {
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = (s, r=document) => r.querySelector(s), $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const scr = $('#scr');
+
+/* ── Spring: Apple-style (response, damping ratio). Interruptible: retargets from current value + velocity. ── */
+class Spring {
+  constructor(value, {response=.4, damping=1, eps=.01}={}) { this.x=value; this.v=0; this.t=value; this.eps=eps; this.cfg(response,damping); this.subs=[]; this.raf=0; }
+  cfg(r,d){ this.k=(2*Math.PI/r)**2; this.c=4*Math.PI*d/r; }
+  on(f){ this.subs.push(f); f(this.x); return this; }
+  emit(){ for(const f of this.subs) f(this.x); }
+  set(x){ this.x=this.t=x; this.v=0; cancelAnimationFrame(this.raf); this.raf=0; this.emit(); }
+  to(t, o={}){
+    if(o.response) this.cfg(o.response, o.damping ?? 1);
+    if(o.velocity !== undefined) this.v=o.velocity;
+    this.t=t;
+    if(reduce){ this.set(t); return; }
+    if(this.raf) return;
+    let last=performance.now();
+    const step = now => {
+      const dt=Math.min((now-last)/1000, 1/30); last=now;
+      for(let i=0;i<4;i++){ const h=dt/4, a=-this.k*(this.x-this.t)-this.c*this.v; this.v+=a*h; this.x+=this.v*h; }
+      if(Math.abs(this.v)<this.eps*10 && Math.abs(this.x-this.t)<this.eps){ this.x=this.t; this.v=0; this.raf=0; this.emit(); return; }
+      this.emit(); this.raf=requestAnimationFrame(step);
+    };
+    this.raf=requestAnimationFrame(step);
+  }
+}
+const project = (v, d=.998) => (v/1000)*d/(1-d);                 // Apple's momentum projection
+const rubber = (o, dim, c=.55) => (o*dim*c)/(dim + c*Math.abs(o));  // rubber-banding
+const haptic = () => { try{ navigator.vibrate && navigator.vibrate(8); }catch(e){} };
+
+/* press feedback on pointer-down (not on click) */
+function pressable(root){
+  root.addEventListener('pointerdown', e => { const b=e.target.closest('button,.tap'); if(b && root.contains(b)) b.classList.add('pressed'); });
+  ['pointerup','pointercancel','pointerleave'].forEach(t => root.addEventListener(t, () => $$('.pressed', root).forEach(b=>b.classList.remove('pressed')), true));
+}
+pressable(scr);
+
+/* ── state ── */
+const GOAL=2500;
+const S = { total:1750, streak:12, best:21, log:[{n:'Glass',ml:250,t:'9:20'},{n:'Bottle',ml:500,t:'8:05'}], counted:false };
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const nowT = () => { const d=new Date(); return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0'); };
+const nameFor = ml => ml<=200?'Cup':ml<=300?'Glass':ml<=400?'Can':ml<=550?'Bottle':'Flask';
+
+/* ── ring (spring on ml) ── */
+const C=2*Math.PI*94;
+function ringBind(root){
+  const pr=$('.pr',root), n=$('.ringtxt .n',root);
+  pr.style.strokeDasharray=C;
+  return x => { const p=Math.max(0,x/GOAL); pr.style.strokeDashoffset=C*(1-Math.min(p,1)); n.textContent=fmt(x); };
+}
+const ring = new Spring(S.total,{response:.55,damping:.82,eps:.5}).on(ringBind(scr));
+
+function renderToday(root=scr){
+  const left=GOAL-S.total, tg=$('.togo',root);
+  tg.textContent = left>0 ? `${fmt(left)} ml to go` : 'Goal reached · streak extended';
+  tg.classList.toggle('done', left<=0);
+  $$('.streakN',root).forEach(e=>e.textContent=S.streak);
+  const L=$('.logList',root);
+  L.innerHTML = S.log.length ? S.log.slice(0,4).map((r,i)=>`<div class="cell ${r.fresh&&root===scr?'logrow':''}">${r.n}<span class="v">${r.ml} ml · ${r.t}</span></div>`).join('') : '<div class="empty">Nothing logged yet today.</div>';
+  S.log.forEach(r=>r.fresh=false);
+  $('.logCount',root).textContent = `${S.log.length} drink${S.log.length===1?'':'s'}`;
+  $('.bannerTxt',root).textContent = left>0 ? `${fmt(left)} ml to go. Keep your ${S.streak}-day streak.` : `Goal reached. ${S.streak} days and counting.`;
+  $('.nextR',root).textContent = left>0 ? '11:00' : 'Tomorrow';
+}
+
+function add(ml){
+  const before = S.total>=GOAL;
+  S.total += ml; S.log.unshift({n:nameFor(ml),ml,t:nowT(),fresh:true});
+  ring.to(S.total,{response:.55,damping:.8});
+  haptic();
+  if(!before && S.total>=GOAL && !S.counted){ S.streak++; S.counted=true; $$('.streakN',scr).forEach(e=>{e.classList.remove('bump'); void e.offsetWidth; e.classList.add('bump');}); }
+  renderToday(); renderStreak(); toast(`Added ${ml} ml`, () => undo());
+}
+function undo(){
+  const r=S.log.shift(); if(!r) return;
+  S.total-=r.ml;
+  if(S.counted && S.total<GOAL){ S.streak--; S.counted=false; }
+  ring.to(S.total,{response:.45,damping:1});
+  renderToday(); renderStreak(); hideToast();
+}
+
+/* toast */
+let toastTimer, toastUndo;
+function toast(msg, onUndo){ $('.toastTxt',scr).textContent=msg; toastUndo=onUndo; $('.toast',scr).classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(hideToast,3200); }
+function hideToast(){ $('.toast',scr).classList.remove('on'); }
+$('.undo',scr).addEventListener('click',()=>toastUndo&&toastUndo());
+
+$$('.add[data-ml]',scr).forEach(b=>b.addEventListener('click',()=>add(+b.dataset.ml)));
+
+/* ── tabs with a sliding lens on a spring ── */
+const tabs=$$('.tab',scr), lens=$('.lens',scr);
+const lensX=new Spring(0,{response:.38,damping:.78}).on(x=>lens.style.transform=`translateX(${x}px)`);
+function sizeLens(){ const w=tabs[0].offsetWidth; lens.style.width=w+'px'; }
+function go(v, root=scr, instant=false){
+  $$('.view',root).forEach(e=>e.classList.toggle('on',e.dataset.v===v));
+  const ts=$$('.tab',root); ts.forEach(t=>t.classList.toggle('on',t.dataset.go===v));
+  const i=ts.findIndex(t=>t.dataset.go===v), x=ts[i].offsetLeft-5;
+  if(root===scr){ instant?lensX.set(x):lensX.to(x); if(v==='history') drawChart(); }
+  else { const l=$('.lens',root); l.style.width=ts[0].offsetWidth+'px'; l.style.transform=`translateX(${x}px)`; }
+}
+tabs.forEach(t=>t.addEventListener('click',()=>{ go(t.dataset.go); haptic(); }));
+
+/* ── streak ── */
+function renderStreak(root=scr){
+  const met=S.total>=GOAL;
+  const days=['M','T','W','T','F','S','S'];
+  $('.week',root).innerHTML = days.map((d,i)=>`<div><i class="${i<5?'y':i===5?(met?'y':'t'):''}"><svg><use href="#i-check"/></svg></i>${d}</div>`).join('');
+  const miss=new Set([4,11,18]); let h=days.map(d=>`<b>${d}</b>`).join('')+'<span></span>'.repeat(3);
+  let count=0;
+  for(let d=1;d<=31;d++){ let c=''; if(d===31) c=met?'y':'t'; else if(!miss.has(d)){c='y';count++;} h+=`<i class="${c}">${d}</i>`; }
+  $('.cal',root).innerHTML=h;
+  $('.calCount',root).textContent = `${count+(met?1:0)} of 31`;
+  $('.bestTxt',root).textContent = `Best ${S.best} days · ${S.best-S.streak} to go`;
+  $('.to30',root).textContent = `${30-S.streak} to go`;
+  $$('.streakN',root).forEach(e=>e.textContent=S.streak);
+}
+
+/* ── history: spring segmented control + animated bars ── */
+const DATA = {
+  w:{lbl:'Daily average', labels:['M','T','W','T','F','S','S'], vals:[2.6,2.7,2.5,2.8,2.6,2.6,null], unit:'L', goal:2.5, met:'6 of 7'},
+  m:{lbl:'Weekly average', labels:['W1','W2','W3','W4','W5'], vals:[16.1,17.4,15.2,18.0,null], unit:'L', goal:17.5, met:'27 of 31'},
+  y:{lbl:'Monthly average', labels:['N','D','J','F','M','A','M','J','J','A','S','O'], vals:[58,61,66,64,70,72,75,79,81,80,76,null], unit:'L', goal:77.5, met:'214 of 365'}
+};
+let range='w';
+const segThumb=$('.histSeg .thumb',scr), segBtns=$$('.histSeg button',scr);
+const thumbX=new Spring(0,{response:.34,damping:.8}).on(x=>segThumb.style.transform=`translateX(${x}px)`);
+function sizeThumb(root=scr){ const b=$$('.histSeg button',root); $('.histSeg .thumb',root).style.width=b[0].offsetWidth+'px'; }
+function drawChart(root=scr, instant=false){
+  const D=DATA[range], vals=D.vals.map(v=>v===null?(range==='w'?S.total/1000:range==='m'?(S.total/1000+12.5):(S.total/1000+60)):v);
+  const max=Math.max(...vals,D.goal)*1.1, ch=$('.chart',root);
+  ch.innerHTML=`<div class="gl" style="bottom:${(D.goal/max)*(140-22)+22}px"></div>` + vals.map((v,i)=>`<div class="col"><div class="b ${v<D.goal?'m':''}" data-h="${v/max}"></div><span>${D.labels[i]}</span></div>`).join('');
+  const bars=$$('.b',ch);
+  bars.forEach(b=>b.style.height=(140-22)+'px');
+  const apply=()=>bars.forEach((b,i)=>{ b.style.transitionDelay=(i*25)+'ms'; b.style.transform=`scaleY(${b.dataset.h})`; });
+  if(instant){ bars.forEach(b=>{b.style.transition='none';}); apply(); } else requestAnimationFrame(()=>requestAnimationFrame(apply));
+  const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+  $('.histLbl',root).textContent=D.lbl; $('.histVal',root).textContent=avg.toFixed(1);
+  $('.histTot',root).textContent=vals.reduce((a,b)=>a+b,0).toFixed(1)+' L'; $('.histMet',root).textContent=D.met;
+}
+segBtns.forEach((b,i)=>b.addEventListener('click',()=>{ range=b.dataset.r; thumbX.to(b.offsetLeft-3); haptic(); drawChart(); }));
+
+/* ── reminders ── */
+$$('[data-tog]',scr).forEach(c=>{
+  const t=$('.tog',c), k=$('i',t); const sp=new Spring(t.classList.contains('on')?20:0,{response:.3,damping:.75}).on(x=>k.style.transform=`translateX(${x}px)`);
+  c.addEventListener('click',()=>{ const on=!t.classList.contains('on'); t.classList.toggle('on',on); sp.to(on?20:0); haptic(); });
+});
+const intervals=['60 min','90 min','2 hours'];
+$('[data-every]',scr).addEventListener('click',()=>{ const e=$('.everyV',scr); e.textContent=intervals[(intervals.indexOf(e.textContent)+1)%3]; });
+
+/* ── bottom sheet: 1:1 drag, velocity projection, rubber-band, spring with velocity handoff ── */
+const sheet=$('.sheet',scr), scrim=$('.scrim',scr), H=sheet.offsetHeight+10;
+const sheetY=new Spring(H,{response:.38,damping:1,eps:.3}).on(y=>{
+  sheet.style.transform=`translateY(${y}px)`;
+  const p=1-Math.min(Math.max(y/H,0),1); scrim.style.opacity=p; scrim.style.pointerEvents=p>.02?'auto':'none';
+  scr.querySelectorAll('.view.on,.tabbar').forEach(e=>e.style.filter=p>0.01?`brightness(${1-.04*p})`:'');
+});
+function openSheet(){ sheetY.to(0,{response:.42,damping:.86}); }
+function closeSheet(v=0){ sheetY.to(H,{response:.36,damping:1,velocity:v}); }
+$('[data-open-sheet]',scr).addEventListener('click',openSheet);
+$('[data-close]',scr).addEventListener('click',()=>closeSheet());
+scrim.addEventListener('click',()=>closeSheet());
+
+let drag=null;
+sheet.addEventListener('pointerdown',e=>{
+  if(e.target.closest('.slider,button')) return;
+  sheet.setPointerCapture(e.pointerId);
+  drag={y0:e.clientY, start:sheetY.x, hist:[{y:e.clientY,t:performance.now()}]};
+  cancelAnimationFrame(sheetY.raf); sheetY.raf=0;        // grab mid-flight: start from presentation value
+});
+sheet.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  let y=drag.start + (e.clientY-drag.y0);
+  if(y<0) y=-rubber(-y, H);                              // resist when pulled past open
+  sheetY.x=y; sheetY.t=y; sheetY.emit();
+  drag.hist.push({y:e.clientY,t:performance.now()}); if(drag.hist.length>5) drag.hist.shift();
+});
+const endDrag=()=>{
+  if(!drag) return;
+  const h=drag.hist, a=h[0], b=h[h.length-1], dt=Math.max(b.t-a.t,1);
+  const v=(b.y-a.y)/dt*1000; drag=null;
+  const landing=sheetY.x+project(v);
+  if(landing>H*0.5) closeSheet(v); else sheetY.to(0,{response:.38,damping:.82,velocity:v});
+};
+sheet.addEventListener('pointerup',endDrag); sheet.addEventListener('pointercancel',endDrag);
+
+/* slider */
+const sl=$('.slider',scr), kn=$('.kn',sl), fil=$('.fil',sl), amtN=$('.amtN',scr), sAdd=$('.sheetAdd',scr);
+let amount=300;
+function setAmt(ml){ amount=Math.max(50,Math.min(1000,Math.round(ml/10)*10)); const p=(amount-50)/950;
+  kn.style.left=(p*100)+'%'; fil.style.width=(p*100)+'%'; amtN.textContent=amount; sAdd.textContent=`Add ${amount} ml`;
+  $$('.preset',scr).forEach(b=>b.classList.toggle('on',+b.dataset.p===amount)); }
+const fromX=x=>{ const r=sl.getBoundingClientRect(); return 50+Math.max(0,Math.min(1,(x-r.left)/r.width))*950; };
+sl.addEventListener('pointerdown',e=>{ sl.setPointerCapture(e.pointerId); sl.classList.add('drag'); setAmt(fromX(e.clientX)); });
+sl.addEventListener('pointermove',e=>{ if(sl.classList.contains('drag')){ const before=Math.round(amount/50); setAmt(fromX(e.clientX)); if(Math.round(amount/50)!==before) haptic(); }});
+['pointerup','pointercancel'].forEach(t=>sl.addEventListener(t,()=>sl.classList.remove('drag')));
+$$('.preset',scr).forEach(b=>b.addEventListener('click',()=>setAmt(+b.dataset.p)));
+sAdd.addEventListener('click',()=>{ closeSheet(); setTimeout(()=>add(amount),120); });
+setAmt(300);
+
+/* ── notification banner: materialises out of the Dynamic Island, swipe up to dismiss ── */
+const banner=$('.banner',scr);
+const bp=new Spring(0,{response:.45,damping:.82,eps:.002}).on(p=>{
+  const q=Math.max(0,p);
+  banner.style.opacity=Math.min(1,q*1.6);
+  banner.style.transform=`translateY(${(p-1)*24}px) scale(${.32+.68*Math.min(q,1.04)},${.12+.88*Math.min(q,1.04)})`;
+  banner.style.filter= q<.98?`blur(${(1-q)*6}px)`:'';
+  banner.style.pointerEvents=q>.5?'auto':'none';
+});
+let bTimer;
+function showBanner(){ bp.to(1,{response:.5,damping:.78}); clearTimeout(bTimer); bTimer=setTimeout(()=>hideBanner(),5000); haptic(); }
+function hideBanner(v=0){ clearTimeout(bTimer); bp.to(0,{response:.35,damping:1,velocity:v}); }
+$('[data-preview]',scr).addEventListener('click',()=>{ go('today'); setTimeout(showBanner,350); });
+$('[data-banner-add]',scr).addEventListener('click',e=>{ e.stopPropagation(); hideBanner(); add(250); });
+let bd=null;
+banner.addEventListener('pointerdown',e=>{ if(e.target.closest('button')) return; banner.setPointerCapture(e.pointerId); clearTimeout(bTimer); cancelAnimationFrame(bp.raf); bp.raf=0; bd={y0:e.clientY,p0:bp.x,hist:[{y:e.clientY,t:performance.now()}]}; });
+banner.addEventListener('pointermove',e=>{ if(!bd) return; let dy=e.clientY-bd.y0; if(dy>0) dy=rubber(dy,120,.35); const p=bd.p0+dy/110; bp.x=bp.t=p; bp.emit(); bd.hist.push({y:e.clientY,t:performance.now()}); if(bd.hist.length>5) bd.hist.shift(); });
+const bEnd=()=>{ if(!bd) return; const h=bd.hist,a=h[0],b=h[h.length-1]; const v=(b.y-a.y)/Math.max(b.t-a.t,1)*1000; bd=null;
+  const land=bp.x+project(v)/110; if(land<.6) hideBanner(v/110); else { bp.to(1,{response:.4,damping:.8,velocity:v/110}); bTimer=setTimeout(()=>hideBanner(),4000);} };
+banner.addEventListener('pointerup',bEnd); banner.addEventListener('pointercancel',bEnd);
+
+/* ── page controls: theme + accent ── */
+$$('#themeSeg button').forEach(b=>b.addEventListener('click',()=>{
+  $$('#themeSeg button').forEach(x=>x.classList.toggle('on',x===b));
+  const dark=b.dataset.t==='dark'; $$('.scr').forEach(s=>s.classList.toggle('dark',dark));
+}));
+$$('.dotbtn').forEach(b=>b.addEventListener('click',()=>{
+  $$('.dotbtn').forEach(x=>x.classList.toggle('on',x===b));
+  document.documentElement.style.setProperty('--accent',b.dataset.c);
+  document.documentElement.style.setProperty('--accent-soft',b.dataset.s);
+  $$('.accHex').forEach(e=>e.textContent=b.dataset.c);
+}));
+
+/* ── init ── */
+renderToday(); renderStreak();
+requestAnimationFrame(()=>{ sizeLens(); sizeThumb(); go('today',scr,true); thumbX.set(0); drawChart(scr,true); });
+addEventListener('resize',()=>{ sizeLens(); sizeThumb(); });
+
+/* ── gallery: static snapshots cloned from the live phone ── */
+const gallery=$('#gallery');
+function snapshot(view, cap, sub, extra){
+  const g=document.createElement('div'); g.className='g';
+  const wrap=document.createElement('div'); wrap.className='scale';
+  const ph=$('#live').cloneNode(true); ph.removeAttribute('id'); $('.scr',ph).removeAttribute('id');
+  $$('.toast,.scrim',ph).forEach(e=>e.classList.remove('on'));
+  wrap.appendChild(ph); g.appendChild(wrap);
+  const c=document.createElement('div'); c.className='cap'; c.innerHTML=`${cap}<span>${sub}</span>`; g.appendChild(c);
+  gallery.appendChild(g);
+  const s=$('.scr',ph);
+  $('.sheet',s).style.transform='translateY(110%)'; $('.scrim',s).style.opacity=0; $('.banner',s).style.opacity=0;
+  $$('.view,.tabbar',s).forEach(e=>e.style.filter='');
+  $('.toast',s).classList.remove('on');
+  $$('.view',s).forEach(v=>{ v.style.transition='none'; });
+  go(view,s);
+  if(view==='history'){ sizeThumb(s); $('.histSeg .thumb',s).style.transform='translateX(0)'; const r=range; range='w'; drawChart(s,true); range=r; }
+  extra && extra(s);
+}
+function buildGallery(){
+  gallery.innerHTML='';
+  snapshot('today','Onboarding','Pick a daily goal', s=>{
+    const o=document.createElement('div'); o.className='onb';
+    o.innerHTML=`<svg width="84" height="84"><use href="#appicon"/></svg><h4>Set your<br>daily goal</h4><p>Suggested from your Health data.<br>Change it anytime.</p>
+      <div class="stp"><span class="rb">−</span><span class="bn">2.5<small> L</small></span><span class="rb">+</span></div>
+      <div class="seg" style="width:100%;margin-top:30px"><div class="thumb" style="width:calc((100% - 6px)/3)"></div><button>L</button><button>oz</button><button>cups</button></div>
+      <button class="cta" style="margin-top:auto">Continue</button>`;
+    s.appendChild(o); $('.tabbar',s).style.display='none';
+  });
+  snapshot('today','Today','Ring, quick adds, log');
+  snapshot('today','Notification','Grows out of the Dynamic Island', s=>{ const b=$('.banner',s); b.style.opacity=1; b.style.transform='none'; b.style.filter=''; });
+  snapshot('today','Add water','A sheet with a slider and presets', s=>{ $('.sheet',s).style.transform='translateY(0)'; $('.scrim',s).style.opacity=1; });
+  snapshot('streak','Streak','Days, week, month, milestones');
+  snapshot('history','History','Week, month and year charts');
+  snapshot('rem','Reminders','Schedule and the evening nudge');
+}
+// build after fonts settle so measurements are right
+(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{ sizeLens(); go('today',scr,true); buildGallery(); });
+})();
+</script>
+</body>
+</html>
