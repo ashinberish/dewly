@@ -1,0 +1,76 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & package
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Xcode version
+        run: xcodebuild -version
+
+      # Fast compile check. Catches every Swift error.
+      - name: Build for iOS Simulator
+        run: |
+          xcodebuild build \
+            -project Dewly.xcodeproj \
+            -scheme Dewly \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/sim \
+            CODE_SIGNING_ALLOWED=NO
+
+      # Real-device build without a signing identity. Sideloading tools re-sign it.
+      - name: Build unsigned device app
+        run: |
+          xcodebuild build \
+            -project Dewly.xcodeproj \
+            -scheme Dewly \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/device \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Package
+        run: |
+          mkdir -p dist/Payload
+          cp -R build/device/Build/Products/Release-iphoneos/Dewly.app dist/Payload/
+          (cd dist && zip -qry Dewly-unsigned.ipa Payload && rm -rf Payload)
+          (cd build/sim/Build/Products/Debug-iphonesimulator && zip -qry "$GITHUB_WORKSPACE/dist/Dewly-simulator.zip" Dewly.app)
+          ls -lh dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Dewly-${{ github.run_number }}
+          path: dist/
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          {
+            echo "### ✅ Dewly built"
+            echo ""
+            echo "Download **Dewly-${{ github.run_number }}** from the *Artifacts* section of this run. It contains:"
+            echo ""
+            echo "- \`Dewly-unsigned.ipa\`: sideload onto an iPhone with Sideloadly or AltStore using a free Apple ID (re-sign every 7 days)."
+            echo "- \`Dewly-simulator.zip\`: unzip, then \`xcrun simctl install booted Dewly.app\` on a Mac with a running simulator."
+          } >> "$GITHUB_STEP_SUMMARY"

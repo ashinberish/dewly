@@ -30,6 +30,31 @@ Design: SF Pro Rounded throughout (`.fontDesign(.rounded)`), capsule controls, i
 
 To try notifications quickly, open **Reminders → Preview notification** and lock the device or leave the app within 3 seconds.
 
+## Test without a paid developer account
+
+Every push and pull request is built by [GitHub Actions](.github/workflows/build.yml). Open the latest run under **Actions → Build**. Then download the **Dewly-N** artifact from the bottom of the page. It contains:
+
+| File | Use it for |
+| --- | --- |
+| `Dewly-unsigned.ipa` | Installing on your iPhone |
+| `Dewly-simulator.zip` | The iOS Simulator on a Mac |
+
+**On an iPhone (free Apple ID):**
+
+1. Install [Sideloadly](https://sideloadly.io) (Windows or Mac) or [AltStore](https://altstore.io).
+2. Connect your iPhone, drag in `Dewly-unsigned.ipa`, and sign in with your normal Apple ID. The tool signs the app for you.
+3. On the iPhone, go to **Settings → General → VPN & Device Management** and trust your Apple ID.
+4. On iOS 16 or later, turn on **Settings → Privacy & Security → Developer Mode**, then restart.
+
+Free Apple ID limits: the app expires after **7 days** (re-sideload to refresh), and you can have up to 3 sideloaded apps at once.
+
+**In the Simulator (Mac):**
+
+```bash
+unzip Dewly-simulator.zip
+xcrun simctl install booted Dewly.app
+```
+
 ## Structure
 
 ```
